@@ -1,0 +1,75 @@
+Gio: Cross Platform GUI Programming
+Gophercon UK 2019
+
+Elias Naur
+mail@eliasnaur.com
+@elias_naur
+https://gioui.org
+https://scatter.im
+
+* Background
+
+* Background
+
+- [[https://groups.google.com/forum/#!topic/golang-nuts/OSD91zz2TgQ]["[ANN] Write Android apps in Go"]] - June, 2013
+- [[https://github.com/golang/mobile/commit/d3521b7338121e39da67b21ea7d8942d3b47942e][First gomobile commit]] - July, 2014
+- [[https://www.youtube.com/watch?v=QfFwceFo97E][dotGo talk introducing reverse bindings]] - October, 2016
+- First (private) Gio commit - October, 2017
+- [[https://groups.google.com/forum/#!topic/golang-nuts/H4us4194WQ4][Public release of Gio]] - March, 2019
+
+: * Background
+
+: .image tribaltrouble.jpg 470 _
+
+: * Introduction
+
+: Gio - [[https://gioui.org][https://gioui.org]]
+
+: Gio is a simple Go module for writing portable and fast graphical interfaces.
+
+
+
+* Gio
+
+[[https://gioui.org][https://gioui.org]]
+
+Features
+
+- Immediate mode design.
+- Only depends on lowest-level platform libraries.
+- GPU accelerated vector and text rendering.
+- No garbage generated in drawing or layout code.
+- Cross platform (macOS, Linux, Windows, Android, iOS, tvOS, Webassembly).
+- Core is 100% Go. OS-specific native interfaces are optional.
+
+
+* Scatter
+
+
+* Scatter
+
+- [[https://scatter.im][https://scatter.im]]
+
+In app stores
+
+- [[https://play.google.com/apps/testing/im.scatter.app][Android Play Store Beta]]
+- [[https://testflight.apple.com/join/jsGgyJvC][iOS TestFlight]]
+
+
+* Demo
+
+* The gio tool
+
+* Why Gio?
+
+
+
+* Why Gio?
+
+Gio is
+
+- Simple. Immediate mode design, no hidden state.
+- Portable. Runs on the desktop, mobile and browser.
+- Fast. GPU accelerated, very little per-frame garbage.
+- Public domain source (UNLICENCE). Dual licenced MIT if you prefer that.
+
