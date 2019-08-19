@@ -1,0 +1,602 @@
+Gio: Cross Platform GUI Programming
+Gophercon UK 2019
+
+Elias Naur
+mail@eliasnaur.com
+@elias_naur
+https://gioui.org
+https://scatter.im
+
+* Background
+
+* Background
+
+- [[https://groups.google.com/forum/#!topic/golang-nuts/OSD91zz2TgQ]["[ANN] Write Android apps in Go"]] - June, 2013
+- [[https://github.com/golang/mobile/commit/d3521b7338121e39da67b21ea7d8942d3b47942e][First gomobile commit]] - July, 2014
+- [[https://www.youtube.com/watch?v=QfFwceFo97E][dotGo talk introducing reverse bindings]] - October, 2016
+- First (private) Gio commit - October, 2017
+- [[https://groups.google.com/forum/#!topic/golang-nuts/H4us4194WQ4][Public release of Gio]] - March, 2019
+
+* Background
+
+.image tribaltrouble.jpg 470 _
+
+* Introduction
+
+Gio - [[https://gioui.org][gioui.org]]
+
+Gio is a simple Go module for writing portable and fast graphical interfaces.
+
+
+
+* Features
+
+- Immediate mode design.
+- Only depends on lowest-level platform libraries.
+- GPU accelerated vector and text rendering.
+- No garbage generated in drawing or layout code.
+- Cross platform (macOS, Linux, Windows, Android, iOS, tvOS, Webassembly).
+- Core is 100% Go. OS-specific native interfaces are optional.
+
+
+* Immediate mode UI
+
+- UI state is owned by the program. Even your layout and widget tree.
+- No callbacks. Events are handled while drawing.
+
+
+* Demo - Scatter
+
+
+* Scatter in app stores
+
+- [[https://play.google.com/apps/testing/im.scatter.app][Android Play Store Beta]]
+- [[https://testflight.apple.com/join/jsGgyJvC][iOS TestFlight]]
+
+
+* Demos
+
+* Blank window
+
+.play programs/blank.go
+
+* Blank window
+
+.play programs/blank.go HLmain
+
+* Blank window
+
+.play programs/blank.go HLeventloop
+
+: I tried to fit a complete hello world example on a slide, but failed. Here's a minimal program for a blank window instead.
+
+: This is a minimal complete Gio program ready to run; it displays an empty window, and is otherwise fully functional.
+
+: * Blank window
+
+: .code programs/blank.go HLinitfunc
+
+: A few surprising details arise from the listing. The first is that the window is created and run from a goroutine started in an init function, not from main. That's because on Android, all non-Java code must be loaded from a C library. And in Go, libraries don't run main functions.
+
+
+
+* Hello, World
+
+.play programs/helloworld.go /START OMIT/,/END OMIT/ HLdraw
+
+
+
+* Running Gio programs
+
+* Linux, macOS, Windows
+
+Enable modules
+
+	export GO111MODULE=on
+
+Build, install or run the program
+
+	go build gioui.org/ui/apps/hello
+	go install scatter.im/cmd/scatter
+	go run helloworld.go
+
+: Running Gio programs is as straightforward as any other program, at least on desktop systems. Linux require a C compiler and a few development libraries, while macOS requires Xcode. There are no build dependencies for Windows, but Gio currently need the ANGLE OpenGL ES emulator to run.
+
+: I recommend enabling module mode so Gio is automatically downloaded for you and to shield yourself from the still frequent API changes.
+
+
+
+* Android
+
+Install the gio tool
+
+	go install gioui.org/cmd/gio
+	$GOBIN/gio -target android -o hello.apk helloworld.go
+
+Install on a connected device or emulator with adb
+
+	adb install hello.apk
+
+: The mobile platforms are of course more troublesome. The Gio project include a tool that can package a Gio program suitable for installation to a mobile device, an emulator or for including in an existing project.
+
+: To build for Android you need the Android SDK and NDK installed. The gio tool can produce an apk file that can be installed with the Android adb tool.
+
+
+
+* iOS/tvOS
+
+For iOS/tvOS devices:
+
+	$GOBIN/gio -target <ios|tvos> -o hello.ipa -appid <bundle id> helloworld.go
+
+Use the .app file extension for simulators:
+
+	$GOBIN/gio -target <ios|tvos> -o hello.app helloworld.go
+
+Install on a running simulator
+
+	xcrun simctl install booted hello.app
+
+: To build for iOS and tvOS you need Xcode and the bundle id from a valid provisioning profile. A good way to acquire that is to set up a sample project in Xcode and run it once on your device.
+
+: The iSimulators don't accept ipa packages, but rather raw .app directories. The gio tool use the output extension to distinguish.
+
+: Please note that tvOS support is very early. For example, there is currenctly no API exposed for the remote control. I added support because it was easy and as a proof of concept.
+
+
+
+* Browsers
+
+To output a directory ready to serve:
+
+	$GOBIN/gio -target js -o www helloworld.go
+
+Use a webserver or goexec to serve it:
+
+	go run github.com/shurcooL/goexec 'http.ListenAndServe(":8080", http.FileServer(http.Dir("www")))'
+
+: The gio tool also build a webassembly version of your program. It includes the required support files and a basic HTML host page so the program is ready to serve.
+
+: You can use any webserver that serves static files; I use Dmitri's goexec tool for demos and tests. Goexec can run a complete webserver in a single line if you have Go modules enabled.
+
+: Note that running in the browser works but is slow. Partly because Gio invokes JavaScript functions in a straightforward but suboptimal way, partly because the Go runtime is not yet a great match for webassembly. I hope that future webassembly improvements will drastically speed up Go in the browser.
+
+: Also note that Gio use a WebGL Canvas element for display and input. You don't get the convenience of HTML DOM elements. At least not yet.
+
+: [go run helloworld.go]
+: [gio -target android -o android.apk helloworld.go]
+: [gio -target ios -o hello.app helloworld.go]
+: [xcrun simctl install booted hello.app]
+: [adb install hello.apk]
+: [go run webassembly.go]
+
+
+
+* Operations
+
+* Operations
+
+Serializing operations
+
+	import "gioui.org/ui" // Pure Go
+
+	var ops ui.Ops
+	// Add operations to ops
+	ui.InvalidateOp{}.Add(ops)
+	...
+
+Only the app package depends on platform libraries
+
+	import "gioui.org/ui/app"
+
+	var w app.Window
+	w.Update(&ops)
+
+
+: In Gio, the basic building block is the operation. There are operations for clipping, transforming and drawing as well as ops for controlling input flow and requesting a redraw for animation.
+
+: This is a list of drawing operations.
+
+: Immediate mode UI libraries redraw everything and Gio is no different; if your program state changes, you simply request a Redraw and redraw everything.
+
+: This is actually more efficient than it might sound, both through the sheer power of modern GPUs but also through designing operations to be efficient.
+
+: Operations are carefully designed such that they generate no garbage when drawing. The underlying Ops buffer is reused and the Add method of every op is written so the op itself never escapes to the heap.
+
+: For example, the label from the helloworld example is drawn garbage free, as long as your string is constant and re-use the font cache.
+
+* Operations
+
+Position other operations
+
+	import "gioui.org/ui"
+
+	ui.TransformOp{}.Offset(f32.Point{...}).Add(ops)
+
+Request a redraw
+
+	ui.InvalidateOp{}.Add(ops) // Immediate
+	ui.InvalidateOp{At: ...}.Add(ops) // Delayed
+
+* Drawing operations
+
+Set current color or image
+
+	import "gioui.org/ui/draw"
+
+	paint.ColorOp{Color: color.RGBA{...}}.Add(ops)
+	paint.ImageOp{Src: ..., Rect: ...}.Add(ops)
+
+Draw with the current color or image
+
+	paint.PaintOp{Rect: ...}.Add(ops)
+
+
+* Clip operations
+
+Clip drawing to a rectangle
+
+	import "gioui.org/draw"
+
+	paint.RectClip(image.Rectangle{...}).Add(ops)
+
+Or to an outline
+
+	var b paint.PathBuilder
+	b.Init(ops)
+	b.Line(...)
+	b.Quad(...) // Quadratic Beziér curve
+	b.Cube(...) // Cubic Beziér curve
+	b.End()
+
+: The major parts of any UI program are drawing, layout and input handling.
+
+: We'll tackle drawing first.
+
+
+* Input operations
+
+Keyboard and text input
+
+	import "gioui.org/ui/key"
+
+	// Declare key handler.
+	key.HandlerOp{Key: handler, Focus: true/false}.Add(ops)
+
+	// Hide soft keyboard.
+	key.HideInputOp{}.Add(ops)
+
+Mouse and touch input
+
+	import "gioui.org/ui/pointer"
+
+	// Define hit area.
+	pointer.RectAreaOp{Size: ...}.Add(ops)
+	pointer.EllipseAreaOp{Size: ...}.Add(ops)
+
+	// Declare pointer handler.
+	pointer.HandlerOp{Key: c, Grab true/false}
+
+
+
+* Drawing
+
+
+* Drawing (and animating)
+
+Drawing and animating a clipped square
+
+.play programs/animatedclipping.go /START OMIT/,/END OMIT/
+
+: This is another animated example, this time with a clip that changes over time.
+
+: [go run animatedpaths.go]
+
+
+
+* Layout
+
+: Layout is the positioning, sizing and layering of widgets.
+
+: Some framework add properties or special widgets for laying out other widgets.
+
+: Layouts in Gio is done through transient helper objects, except for the scrollable list which is user controlled.
+
+
+* Constraints and dimensions
+
+Constraints are input
+
+	package layout // import gioui.org/ui/layout
+
+	type Constraints struct {
+		Width  Constraint
+		Height Constraint
+	}
+
+	type Constraint struct {
+		Min, Max int
+	}
+
+Dimensions are output
+
+	type Dimens struct {
+		Size     image.Point
+		Baseline int
+	}
+
+* Constraints and dimensions
+
+Widgets accept constraints, output dimensions
+
+	package text // import gioui.org/ui/text
+
+	func (l Label) Layout(ops *ui.Ops, cs layout.Constraints) layout.Dimens
+	func (e *Editor) Layout(ops *ui.Ops, cs layout.Constraints) layout.Dimens
+
+	package widget // import gioui.org/ui/widget
+
+	func (im Image) Layout(c ui.Config, ops *ui.Ops, cs layout.Constraints) layout.Dimens
+
+
+: Gio borrows Constraints and Dimensions from the Flutter framework.
+
+: The idea is that a widgets is given a range of accepted sizes, and return its actual "layout" size.
+
+: Note that some widgets may choose to draw outside its layout rectangle.
+
+: By convention, widgets have a Layout method that take the constraints as input and return the dimensions.
+
+: Label is no different
+
+
+
+
+* Example - two labels
+
+.play programs/twolabels2.go /START DRAW OMIT/,/END DRAW OMIT/ HLdraw
+
+: The constraints given to us in drawLabel are rigid, and forces the dimensions of the labels to take up the whole window.
+
+: So first we loosen the constraints by setting the minimum height to 0.
+
+: Then, we use the dimensions of the first label to offset the second.
+
+: [go run twolabels2.go]
+
+
+
+* Layout helpers
+
+Aligning
+
+	var ops *ui.Ops
+	var cs layout.Constraints
+
+	align := layout.Align{Alignment: layout.Center}
+	cs = align.Begin(ops, cs)
+	...
+	dimensions := someWidget.Layout(..., cs) // Draw widget
+	...
+	dimensions = align.End(dimensions)
+
+Insetting
+
+	var c ui.Config
+	inset := layout.Inset{Top: ui.Dp(8), ...} // 8dp top inset
+	cs = inset.Begin(c, ops, cs)
+	...
+	dimensions := anotherWidget.Layout(..., cs) // Draw widget
+	...
+	dimensions = inset.End(dimensions)
+
+: Centering is a special case of aligning widgets. Aligning and insetting widgets are so common that Gio provides two helper
+: types in the layout package, Align and Inset.
+
+: Both Align and Inset are designed to be garbage free. Go is clever enough to allocate them on the stack even though their Begin methods mutate them.
+
+: Note that the layout package represent distances with device independent points instead of pixels to ensure your program looks the
+: same regardless of your monitor's pixel density.
+
+
+
+* Flex layout
+
+Lay out widgets on an axis.
+
+.play programs/flex.go /START OMIT/,/END OMIT/ HLflex
+
+: A more complex layout in Gio is the Flex. It mimics the flex layout from Flutter and is used for laying out widgets along an axis.
+
+: The program shown on this slide demonstrates a weighted layout, where the first rectangle takes up half the available space, while the two last
+: share the other half.
+
+: [go run flex.go]
+
+
+
+* Stack layout
+
+.play programs/stack.go /START OMIT/,/END OMIT/ HLstack
+
+: Stack is another layout in Gio which as the name implies is used for layering widget on top of each other.
+
+: In this example, stack is used to stack a list of rectangles with increasing insets.
+
+: [go run stack.go]
+
+
+
+* List layout
+
+.code programs/list.go /START INIT OMIT/,/END INIT OMIT/ HLlist
+
+.play programs/list.go /START OMIT/,/END OMIT/ HLlist
+
+: The most complex layout in Gio is the scrollable List. It is also the first stateful widget you've seen, in that it can accept user input and scroll its content to match.
+
+: Even though the list is declared to be a million elements long, the list only lays out the currently visible elements.
+
+: List does that by asking your program to lay out a particular index, returned by the Index method.
+
+: [go run list.go]
+
+
+
+* Input
+
+: I came up with the name Gio as an acronym for "graphical input/output". So far we've only seen output: drawing and positioning drawings.
+
+: Let's move on to the other side, input.
+
+
+
+* Input queue and handler keys
+
+	// Queue maps an event handler key to the events
+	// available to the handler.
+	type Queue interface {
+		Next(k Key) (Event, bool)
+	}
+
+	// Key is the stable identifier for an event handler.
+	// For a handler h, the key is typically &h.
+	type Key interface{}
+
+: One of my favorite features of immediate mode UI programs is the absence of callbacks.
+
+: In gio all events from input sources such your mouse, finger, keyboard are distributed to handlers through the input.Queue.
+
+: Queue is an interface with just a single method, Next, returning all events available in this frame for a given
+: handler.
+
+: A Key is the identifier for a handler. Any value will do, as long as it is stable across frames,
+: and can be used as a map key.
+
+: Typically the address of the handler is used as its Key.
+
+
+
+* Pointer event handling
+
+.play programs/pointer.go /START OMIT/,/END OMIT/ HLevent
+
+: Let's say you have a Button widget. It has only one field, the pressed boolean.
+
+: The first part of the button layout method updates the pressed state. It runs through the available events and set the pressed to true for press events and false for release events.
+
+: Then, it registers the handler by specifying a hit area, in this case a rectangle, and a HandlerOp for specifying its own key.
+
+: Note how there are no callbacks involved and that there is no way or need to unregister a handler; all handler registrations are cleared
+
+: at the beginning of the next frame.
+
+: Registration and handling of events are separate and can be done in any order, because event handling is for the current set of events, while registration is for delivering events between frames.
+
+: [go run pointer.go]
+
+
+
+* Window input queue
+
+The Window's Queue method returns an input.Queue for OS events.
+
+	package app // import gioui.org/ui/app
+
+	func (w *Window) Queue() *Queue
+
+
+
+* Gestures
+
+	import "gioui.org/ui"
+	import "gioui.org/ui/gesture"
+	import "gioui.org/ui/input"
+
+Detect clicks
+
+	var queue input.Queue
+	var c gesture.Click
+	for event, ok := c.Next(queue); ok; event, ok = c.Next(queue) {
+		// event is a gesture.ClickEvent, not a raw pointer.Event.
+	}
+
+Determine scroll distance from mouse wheel or touch drag/fling
+
+	var cfg ui.Config
+	var s gesture.Scroll
+
+	distance := s.Scroll(cfg, queue, gesture.Vertical)
+
+: The gesture package help your program recognize higher level gestures from low level pointer events. Examples shown are click and scroll.
+
+: In a sense, gestures are state machines that are updated by raw pointers events.
+
+: The Click state machine record the current pressed state, which the Scroll state machine track touch velocity, while animating it on touch release.
+
+
+* Widgets
+
+* Widgets - the Editor
+
+Initialize the editor
+
+	import "gioui.org/ui/text"
+
+.code programs/editor.go /START INIT OMIT/,/END INIT OMIT/
+
+Draw, layout and handle input in one call.
+
+.play programs/editor.go /START OMIT/,/END OMIT/
+
+* Why Gio?
+
+
+
+* Why Gio?
+
+Gio is
+
+- Simple. Immediate mode design, no hidden state.
+- Portable. Runs on the desktop, mobile and browser.
+- Fast. GPU accelerated, very little per-frame garbage.
+- Public domain source (UNLICENCE). Dual licenced MIT if you prefer that.
+
+: So if you want to write your user interface in Go,
+
+: and care about as simple and straightforward programming interface.
+
+: Or if you like myself, loathe to repeat yourself, Gio runs on all the popular platforms.
+
+: Portability is also very convenient during development. I usually test on my desktop system while only occasionally deploying to an emulator or device for verification or for mobile specific features.
+
+: That's it for a short introduction to the major parts of the Gio library as it looks like today.
+
+: Perhaps you're wondering whether you should spend time on Gio.
+
+: I put a lot of effort into ensuring Gio's design follows that of Go: simple, orthogonal and scalable. Not just for speed but for programmer productivity.
+
+: Simplicity. The immediate mode design makes it much less frustrating to debug and develop UI programs.
+
+: Portability, because it's written in Go and because its only non-Go dependencies are low level system libraries for window management, input handling, and access to the GPU.
+
+: Gio is fast because Go is fast and because it's designed not to generate garbage during a frame. And the heavy lifting is done by your GPU.
+
+: Convenient. Gio enjoys the very low compilation times and because it runs on your desktop you don't need a device or emulator for much of your mobile development.
+
+: And finally, Gio is unlicenced so you can take whatever you like from Gio and use it in your own project if you choose. You don't need to pollute your code with attribution or licence.
+
+: Let's make Go a natural and even an obvious choice for writing GUI programs!
+
+
+: What about the future of Gio?
+
+: Well, I've already spent over a year on it, so according to the Lindy effect I'm likely to spend at least another year on it.
+
+: I'm going to spend that time bringing Gio closer to a 1.0 version and on Gio programs that interest me, such as Scatter.
+
+: I very much hope you will join me in the future development of Gio. It most likely won't succeed without your help.
+
+: If you have any questions or comments I'm available during the entire Gophercon.
+
+: Thank you for listening.
