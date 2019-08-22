@@ -4,12 +4,14 @@ import "gioui.org/ui/app"
 import "gioui.org/ui"
 import "gioui.org/ui/layout"
 import "gophercon/simple"
+import "fmt"
 
 func main() {
 	go func() {
 		theme := simple.NewTheme()
 		w := app.NewWindow()
 		ops := new(ui.Ops)
+		list := layout.List{Axis: layout.Vertical}
 		for e := range w.Events() {
 			switch e := e.(type) {
 			case app.UpdateEvent:
@@ -18,10 +20,13 @@ func main() {
 				theme.Reset(cfg)
 				cs := layout.RigidConstraints(e.Size)
 
-				align := layout.Align{Alignment: layout.Center}
-				cs = align.Begin(ops, cs)
-				dims := theme.Label("hello, world", 46).Layout(ops, cs)
-				align.End(dims)
+				for list.Init(cfg, w.Queue(), ops, cs, 100); list.More(); list.Next() {
+					cs := list.Constraints()
+					s := fmt.Sprintf("hello, world %d", list.Index())
+					dims := theme.Label(s, 46).Layout(ops, cs)
+					list.End(dims)
+				}
+				list.Layout()
 
 				w.Update(ops)
 			}
