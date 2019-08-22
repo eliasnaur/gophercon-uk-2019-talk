@@ -10,6 +10,7 @@ func main() {
 		theme := simple.NewTheme()
 		w := app.NewWindow()
 		ops := new(ui.Ops)
+		editor := theme.Editor(46)
 		for e := range w.Events() {
 			switch e := e.(type) {
 			case app.UpdateEvent:
@@ -17,7 +18,7 @@ func main() {
 				ops.Reset()
 				theme.Reset(cfg)
 				cs := layout.RigidConstraints(e.Size)
-				theme.Label("hello, world", 46).Layout(ops, cs)
+				editor.Layout(cfg, w.Queue(), ops, cs)
 				w.Update(ops)
 			}
 		}
