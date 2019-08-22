@@ -12,6 +12,7 @@ func main() {
 		w := app.NewWindow()
 		ops := new(ui.Ops)
 		list := layout.List{Axis: layout.Vertical}
+		btn := new(simple.IconButton)
 		for e := range w.Events() {
 			switch e := e.(type) {
 			case app.UpdateEvent:
@@ -27,6 +28,11 @@ func main() {
 					list.End(dims)
 				}
 				list.Layout()
+
+				align := layout.Align{Alignment: layout.SE}
+				cs = align.Begin(ops, cs)
+				dims := btn.Layout(cfg, ops, cs)
+				align.End(dims)
 
 				w.Update(ops)
 			}
