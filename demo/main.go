@@ -1,21 +1,23 @@
 package main
 
 import "gioui.org/ui/app"
-import "gioui.org/ui/paint"
 import "gioui.org/ui"
-import "gioui.org/ui/f32"
+import "gioui.org/ui/layout"
+import "gophercon/simple"
 
 func main() {
 	go func() {
+		theme := simple.NewTheme()
 		w := app.NewWindow()
 		ops := new(ui.Ops)
 		for e := range w.Events() {
-			switch e.(type) {
+			switch e := e.(type) {
 			case app.UpdateEvent:
+				cfg := &e.Config
 				ops.Reset()
-				paint.PaintOp{Rect: f32.Rectangle{
-					Max: f32.Point{X: 400, Y: 500},
-				}}.Add(ops)
+				theme.Reset(cfg)
+				cs := layout.RigidConstraints(e.Size)
+				theme.Label("hello, world", 46).Layout(ops, cs)
 				w.Update(ops)
 			}
 		}
