@@ -17,7 +17,12 @@ func main() {
 				ops.Reset()
 				theme.Reset(cfg)
 				cs := layout.RigidConstraints(e.Size)
-				theme.Label("hello, world", 46).Layout(ops, cs)
+
+				align := layout.Align{Alignment: layout.Center}
+				cs = align.Begin(ops, cs)
+				dims := theme.Label("hello, world", 46).Layout(ops, cs)
+				align.End(dims)
+
 				w.Update(ops)
 			}
 		}
