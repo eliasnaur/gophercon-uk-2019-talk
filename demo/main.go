@@ -3,6 +3,7 @@ package main
 import "gioui.org/ui/app"
 import "gioui.org/ui"
 import "gioui.org/ui/layout"
+import "gioui.org/ui/gesture"
 import "gophercon/simple"
 import "fmt"
 
@@ -13,6 +14,7 @@ func main() {
 		ops := new(ui.Ops)
 		list := layout.List{Axis: layout.Vertical}
 		btn := new(simple.IconButton)
+		n := 3
 		for e := range w.Events() {
 			switch e := e.(type) {
 			case app.UpdateEvent:
@@ -21,7 +23,14 @@ func main() {
 				theme.Reset(cfg)
 				cs := layout.RigidConstraints(e.Size)
 
-				for list.Init(cfg, w.Queue(), ops, cs, 100); list.More(); list.Next() {
+				q := w.Queue()
+				for e, ok := btn.Next(q); ok; e, ok = btn.Next(q) {
+					if e.Type == gesture.TypeClick {
+						n += 1
+					}
+				}
+
+				for list.Init(cfg, q, ops, cs, n); list.More(); list.Next() {
 					cs := list.Constraints()
 					s := fmt.Sprintf("hello, world %d", list.Index())
 					dims := theme.Label(s, 46).Layout(ops, cs)
