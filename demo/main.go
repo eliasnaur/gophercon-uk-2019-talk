@@ -31,7 +31,10 @@ func main() {
 
 				align := layout.Align{Alignment: layout.SE}
 				cs = align.Begin(ops, cs)
+				margins := layout.UniformInset(ui.Dp(8))
+				cs = margins.Begin(cfg, ops, cs)
 				dims := btn.Layout(cfg, ops, cs)
+				dims = margins.End(dims)
 				align.End(dims)
 
 				w.Update(ops)
