@@ -3,13 +3,19 @@ package simple
 import (
 	"image"
 	"image/color"
+	"image/draw"
 
 	"gioui.org/ui"
 	"gioui.org/ui/f32"
+	"gioui.org/ui/input"
 	"gioui.org/ui/layout"
 	"gioui.org/ui/measure"
 	"gioui.org/ui/paint"
+	"gioui.org/ui/pointer"
+	"gioui.org/ui/gesture"
 	"gioui.org/ui/text"
+	"golang.org/x/exp/shiny/iconvg"
+	"golang.org/x/exp/shiny/materialdesign/icons"
 	"golang.org/x/image/font/gofont/goregular"
 	"golang.org/x/image/font/sfnt"
 )
@@ -55,6 +61,89 @@ func (t *Theme) Label(txt string, size float32) text.Label {
 	return text.Label{Face: t.face(size), Text: txt}
 }
 
+type icon struct {
+	src  []byte
+	size ui.Value
+
+	// Cached values.
+	img     image.Image
+	imgSize int
+}
+
+type IconButton struct {
+	icon *icon
+	click gesture.Click
+}
+
+func (b *IconButton) Next(queue input.Queue) (gesture.ClickEvent, bool) {
+	return b.click.Next(queue)
+}
+
+func (b *IconButton) Layout(c ui.Config, ops *ui.Ops, cs layout.Constraints) layout.Dimens {
+	if b.icon == nil {
+		b.icon = &icon{src: icons.ContentAdd, size: ui.Dp(28)}
+	}
+	f := layout.Flex{Axis: layout.Vertical, Alignment: layout.End}
+	f.Init(ops, cs)
+	cs = f.Rigid()
+	in := layout.Inset{Top: ui.Dp(4)}
+	cs = in.Begin(c, ops, cs)
+	col := colorMaterial(ops, rgb(0x62798c))
+	dims := fab(ops, cs, b.icon.image(c), col, c.Px(ui.Dp(56)))
+	pointer.EllipseAreaOp{Rect: image.Rectangle{Max: dims.Size}}.Add(ops)
+	b.click.Add(ops)
+	dims = in.End(dims)
+	return f.Layout(f.End(dims))
+}
+
+func colorMaterial(ops *ui.Ops, color color.RGBA) ui.MacroOp {
+	var mat ui.MacroOp
+	mat.Record(ops)
+	paint.ColorOp{Color: color}.Add(ops)
+	mat.Stop()
+	return mat
+}
+
+func (ic *icon) image(cfg ui.Config) image.Image {
+	sz := cfg.Px(ic.size)
+	if sz == ic.imgSize {
+		return ic.img
+	}
+	m, _ := iconvg.DecodeMetadata(ic.src)
+	dx, dy := m.ViewBox.AspectRatio()
+	img := image.NewRGBA(image.Rectangle{Max: image.Point{X: sz, Y: int(float32(sz) * dy / dx)}})
+	var ico iconvg.Rasterizer
+	ico.SetDstImage(img, img.Bounds(), draw.Src)
+	// Use white for icons.
+	m.Palette[0] = color.RGBA{A: 0xff, R: 0xff, G: 0xff, B: 0xff}
+	iconvg.Decode(&ico, ic.src, &iconvg.DecodeOptions{
+		Palette: &m.Palette,
+	})
+	ic.img = img
+	ic.imgSize = sz
+	return img
+}
+
+func toRectF(r image.Rectangle) f32.Rectangle {
+	return f32.Rectangle{
+		Min: f32.Point{X: float32(r.Min.X), Y: float32(r.Min.Y)},
+		Max: f32.Point{X: float32(r.Max.X), Y: float32(r.Max.Y)},
+	}
+}
+
+func fab(ops *ui.Ops, cs layout.Constraints, ico image.Image, mat ui.MacroOp, size int) layout.Dimens {
+	dp := image.Point{X: (size - ico.Bounds().Dx()) / 2, Y: (size - ico.Bounds().Dy()) / 2}
+	dims := image.Point{X: size, Y: size}
+	rr := float32(size) * .5
+	roundRect(ops, float32(size), float32(size), rr, rr, rr, rr)
+	mat.Add(ops)
+	paint.PaintOp{Rect: f32.Rectangle{Max: f32.Point{X: float32(size), Y: float32(size)}}}.Add(ops)
+	paint.ImageOp{Src: ico, Rect: ico.Bounds()}.Add(ops)
+	paint.PaintOp{
+		Rect: toRectF(ico.Bounds().Add(dp)),
+	}.Add(ops)
+	return layout.Dimens{Size: dims}
+}
 func (r Rect) Layout(ops *ui.Ops, cs layout.Constraints) layout.Dimens {
 	col := argb(r.Color)
 	sz := image.Point{X: cs.Width.Max, Y: cs.Height.Max}

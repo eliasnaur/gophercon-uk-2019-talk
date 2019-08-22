@@ -6,7 +6,7 @@ import (
 	"gioui.org/ui/f32"
 	"gioui.org/ui/paint"
 
-	"gopherconuk2019/simple"
+	"gophercon/simple"
 )
 
 // START OMIT

@@ -5,7 +5,7 @@ import (
 	"gioui.org/ui/app"
 	"gioui.org/ui/layout"
 
-	"gopherconuk2019/simple"
+	"gophercon/simple"
 )
 
 // START OMIT
