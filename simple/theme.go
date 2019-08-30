@@ -88,7 +88,7 @@ func (b *IconButton) Next(queue input.Queue) (gesture.ClickEvent, bool) {
 	return e, ok
 }
 
-func (b *IconButton) Layout(c ui.Config, ops *ui.Ops, cs layout.Constraints) layout.Dimens {
+func (b *IconButton) Layout(c ui.Config, ops *ui.Ops, cs layout.Constraints) layout.Dimensions {
 	if b.icon == nil {
 		b.icon = &icon{src: icons.ContentAdd, size: ui.Dp(48)}
 	}
@@ -166,7 +166,7 @@ func toRectF(r image.Rectangle) f32.Rectangle {
 	}
 }
 
-func fab(ops *ui.Ops, cs layout.Constraints, ico image.Image, mat ui.MacroOp, size int) layout.Dimens {
+func fab(ops *ui.Ops, cs layout.Constraints, ico image.Image, mat ui.MacroOp, size int) layout.Dimensions {
 	dp := image.Point{X: (size - ico.Bounds().Dx()) / 2, Y: (size - ico.Bounds().Dy()) / 2}
 	dims := image.Point{X: size, Y: size}
 	rr := float32(size) * .5
@@ -177,9 +177,9 @@ func fab(ops *ui.Ops, cs layout.Constraints, ico image.Image, mat ui.MacroOp, si
 	paint.PaintOp{
 		Rect: toRectF(ico.Bounds().Add(dp)),
 	}.Add(ops)
-	return layout.Dimens{Size: dims}
+	return layout.Dimensions{Size: dims}
 }
-func (r Rect) Layout(ops *ui.Ops, cs layout.Constraints) layout.Dimens {
+func (r Rect) Layout(ops *ui.Ops, cs layout.Constraints) layout.Dimensions {
 	col := argb(r.Color)
 	sz := image.Point{X: cs.Width.Max, Y: cs.Height.Max}
 	if rr := r.Corner; rr > 0 {
@@ -192,7 +192,7 @@ func (r Rect) Layout(ops *ui.Ops, cs layout.Constraints) layout.Dimens {
 			Y: float32(sz.Y),
 		},
 	}}.Add(ops)
-	return layout.Dimens{Size: sz}
+	return layout.Dimensions{Size: sz}
 }
 
 func rgb(c uint32) color.RGBA {
