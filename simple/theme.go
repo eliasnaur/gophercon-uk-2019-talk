@@ -94,41 +94,43 @@ func (b *IconButton) Layout(c ui.Config, ops *ui.Ops, cs layout.Constraints) lay
 	}
 	f := layout.Flex{Axis: layout.Vertical, Alignment: layout.End}
 	f.Init(ops, cs)
-	cs = f.Rigid()
-	in := layout.Inset{Top: ui.Dp(8)}
-	cs = in.Begin(c, ops, cs)
-	col := colorMaterial(ops, rgb(0x00dd00))
-	if b.click.State() == gesture.StatePressed {
-		col = colorMaterial(ops, rgb(0x00aa00))
-	}
-	size := c.Px(ui.Dp(112))
-	dims := fab(ops, cs, b.icon.image(c), col, size)
-	if b.inkStart {
-		b.inkTime = c.Now()
-		b.inkStart = false
-	}
-	if d := c.Now().Sub(b.inkTime); d < time.Second {
-		t := float32(d.Seconds())
-		var stack ui.StackOp
-		stack.Push(ops)
-		size := float32(size) * 7 * t
-		rr := size * .5
-		col := byte(0xaa * (1 - t*t))
-		ink := colorMaterial(ops, color.RGBA{A: col, R: col, G: col, B: col})
-		ink.Add(ops)
-		ui.TransformOp{}.Offset(b.inkPos).Offset(f32.Point{
-			X: -rr,
-			Y: -rr,
-		}).Add(ops)
-		roundRect(ops, float32(size), float32(size), rr, rr, rr, rr)
-		paint.PaintOp{Rect: f32.Rectangle{Max: f32.Point{X: float32(size), Y: float32(size)}}}.Add(ops)
-		stack.Pop()
-		ui.InvalidateOp{}.Add(ops)
-	}
-	pointer.EllipseAreaOp{Rect: image.Rectangle{Max: dims.Size}}.Add(ops)
-	b.click.Add(ops)
-	dims = in.End(dims)
-	return f.Layout(f.End(dims))
+	child := f.Rigid(func(cs layout.Constraints) layout.Dimensions {
+		in := layout.Inset{Top: ui.Dp(8)}
+		return in.Layout(c, ops, cs, func(cs layout.Constraints) layout.Dimensions {
+			col := colorMaterial(ops, rgb(0x00dd00))
+			if b.click.State() == gesture.StatePressed {
+				col = colorMaterial(ops, rgb(0x00aa00))
+			}
+			size := c.Px(ui.Dp(112))
+			dims := fab(ops, cs, b.icon.image(c), col, size)
+			if b.inkStart {
+				b.inkTime = c.Now()
+				b.inkStart = false
+			}
+			if d := c.Now().Sub(b.inkTime); d < time.Second {
+				t := float32(d.Seconds())
+				var stack ui.StackOp
+				stack.Push(ops)
+				size := float32(size) * 7 * t
+				rr := size * .5
+				col := byte(0xaa * (1 - t*t))
+				ink := colorMaterial(ops, color.RGBA{A: col, R: col, G: col, B: col})
+				ink.Add(ops)
+				ui.TransformOp{}.Offset(b.inkPos).Offset(f32.Point{
+					X: -rr,
+					Y: -rr,
+				}).Add(ops)
+				roundRect(ops, float32(size), float32(size), rr, rr, rr, rr)
+				paint.PaintOp{Rect: f32.Rectangle{Max: f32.Point{X: float32(size), Y: float32(size)}}}.Add(ops)
+				stack.Pop()
+				ui.InvalidateOp{}.Add(ops)
+			}
+			pointer.EllipseAreaOp{Rect: image.Rectangle{Max: dims.Size}}.Add(ops)
+			b.click.Add(ops)
+			return dims
+		})
+	})
+	return f.Layout(child)
 }
 
 func colorMaterial(ops *ui.Ops, color color.RGBA) ui.MacroOp {

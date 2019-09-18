@@ -1,11 +1,14 @@
 package main
 
-import "gioui.org/ui/app"
-import "gioui.org/ui"
-import "gioui.org/ui/layout"
-import "gioui.org/ui/gesture"
-import "gopher.con/simple"
-import "fmt"
+import (
+	"fmt"
+
+	"gioui.org/ui"
+	"gioui.org/ui/app"
+	"gioui.org/ui/gesture"
+	"gioui.org/ui/layout"
+	"gopher.con/simple"
+)
 
 func main() {
 	go func() {
@@ -30,21 +33,18 @@ func main() {
 					}
 				}
 
-				for list.Init(cfg, q, ops, cs, n); list.More(); list.Next() {
-					cs := list.Constraints()
-					s := fmt.Sprintf("hello, world %d", list.Index())
-					dims := theme.Label(s, 46).Layout(ops, cs)
-					list.End(dims)
-				}
-				list.Layout()
+				list.Layout(cfg, q, ops, cs, n, func(cs layout.Constraints, i int) layout.Dimensions {
+					s := fmt.Sprintf("hello, world %d", i)
+					return theme.Label(s, 46).Layout(ops, cs)
+				})
 
 				align := layout.Align{Alignment: layout.SE}
-				cs = align.Begin(ops, cs)
-				margins := layout.UniformInset(ui.Dp(8))
-				cs = margins.Begin(cfg, ops, cs)
-				dims := btn.Layout(cfg, ops, cs)
-				dims = margins.End(dims)
-				align.End(dims)
+				align.Layout(ops, cs, func(cs layout.Constraints) layout.Dimensions {
+					margins := layout.UniformInset(ui.Dp(8))
+					return margins.Layout(cfg, ops, cs, func(cs layout.Constraints) layout.Dimensions {
+						return btn.Layout(cfg, ops, cs)
+					})
+				})
 
 				w.Update(ops)
 			}
