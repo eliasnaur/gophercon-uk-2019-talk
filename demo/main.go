@@ -14,17 +14,17 @@ func main() {
 	go func() {
 		theme := simple.NewTheme()
 		w := app.NewWindow()
-		ops := new(ui.Ops)
+		gtx := &layout.Context{
+			Queue: w.Queue(),
+		}
 		list := layout.List{Axis: layout.Vertical}
 		btn := new(simple.IconButton)
 		n := 3
 		for e := range w.Events() {
 			switch e := e.(type) {
 			case app.UpdateEvent:
-				cfg := &e.Config
-				ops.Reset()
-				theme.Reset(cfg)
-				cs := layout.RigidConstraints(e.Size)
+				gtx.Reset(&e.Config, layout.RigidConstraints(e.Size))
+				theme.Reset(gtx.Config)
 
 				q := w.Queue()
 				for e, ok := btn.Next(q); ok; e, ok = btn.Next(q) {
@@ -33,20 +33,20 @@ func main() {
 					}
 				}
 
-				list.Layout(cfg, q, ops, cs, n, func(cs layout.Constraints, i int) layout.Dimensions {
+				list.Layout(gtx, n, func(i int) {
 					s := fmt.Sprintf("hello, world %d", i)
-					return theme.Label(s, 46).Layout(ops, cs)
+					theme.Label(s, 46).Layout(gtx)
 				})
 
-				align := layout.Align{Alignment: layout.SE}
-				align.Layout(ops, cs, func(cs layout.Constraints) layout.Dimensions {
+				align := layout.Align(layout.SE)
+				align.Layout(gtx, func() {
 					margins := layout.UniformInset(ui.Dp(8))
-					return margins.Layout(cfg, ops, cs, func(cs layout.Constraints) layout.Dimensions {
-						return btn.Layout(cfg, ops, cs)
+					margins.Layout(gtx, func() {
+						btn.Layout(gtx)
 					})
 				})
 
-				w.Update(ops)
+				w.Update(gtx.Ops)
 			}
 		}
 	}()

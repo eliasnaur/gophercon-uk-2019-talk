@@ -9,7 +9,6 @@ import (
 	"gioui.org/ui"
 	"gioui.org/ui/f32"
 	"gioui.org/ui/gesture"
-	"gioui.org/ui/input"
 	"gioui.org/ui/layout"
 	"gioui.org/ui/measure"
 	"gioui.org/ui/paint"
@@ -79,7 +78,7 @@ type IconButton struct {
 	inkPos   f32.Point
 }
 
-func (b *IconButton) Next(queue input.Queue) (gesture.ClickEvent, bool) {
+func (b *IconButton) Next(queue ui.Queue) (gesture.ClickEvent, bool) {
 	e, ok := b.click.Next(queue)
 	if e.Type == gesture.TypeClick {
 		b.inkPos = e.Position
@@ -88,49 +87,48 @@ func (b *IconButton) Next(queue input.Queue) (gesture.ClickEvent, bool) {
 	return e, ok
 }
 
-func (b *IconButton) Layout(c ui.Config, ops *ui.Ops, cs layout.Constraints) layout.Dimensions {
+func (b *IconButton) Layout(gtx *layout.Context) {
 	if b.icon == nil {
 		b.icon = &icon{src: icons.ContentAdd, size: ui.Dp(48)}
 	}
 	f := layout.Flex{Axis: layout.Vertical, Alignment: layout.End}
-	f.Init(ops, cs)
-	child := f.Rigid(func(cs layout.Constraints) layout.Dimensions {
+	f.Init(gtx)
+	child := f.Rigid(func() {
 		in := layout.Inset{Top: ui.Dp(8)}
-		return in.Layout(c, ops, cs, func(cs layout.Constraints) layout.Dimensions {
-			col := colorMaterial(ops, rgb(0x00dd00))
+		in.Layout(gtx, func() {
+			col := colorMaterial(gtx.Ops, rgb(0x00dd00))
 			if b.click.State() == gesture.StatePressed {
-				col = colorMaterial(ops, rgb(0x00aa00))
+				col = colorMaterial(gtx.Ops, rgb(0x00aa00))
 			}
-			size := c.Px(ui.Dp(112))
-			dims := fab(ops, cs, b.icon.image(c), col, size)
+			size := gtx.Px(ui.Dp(112))
+			fab(gtx, b.icon.image(gtx), col, size)
 			if b.inkStart {
-				b.inkTime = c.Now()
+				b.inkTime = gtx.Now()
 				b.inkStart = false
 			}
-			if d := c.Now().Sub(b.inkTime); d < time.Second {
+			if d := gtx.Now().Sub(b.inkTime); d < time.Second {
 				t := float32(d.Seconds())
 				var stack ui.StackOp
-				stack.Push(ops)
+				stack.Push(gtx.Ops)
 				size := float32(size) * 7 * t
 				rr := size * .5
 				col := byte(0xaa * (1 - t*t))
-				ink := colorMaterial(ops, color.RGBA{A: col, R: col, G: col, B: col})
-				ink.Add(ops)
+				ink := colorMaterial(gtx.Ops, color.RGBA{A: col, R: col, G: col, B: col})
+				ink.Add(gtx.Ops)
 				ui.TransformOp{}.Offset(b.inkPos).Offset(f32.Point{
 					X: -rr,
 					Y: -rr,
-				}).Add(ops)
-				roundRect(ops, float32(size), float32(size), rr, rr, rr, rr)
-				paint.PaintOp{Rect: f32.Rectangle{Max: f32.Point{X: float32(size), Y: float32(size)}}}.Add(ops)
+				}).Add(gtx.Ops)
+				roundRect(gtx.Ops, float32(size), float32(size), rr, rr, rr, rr)
+				paint.PaintOp{Rect: f32.Rectangle{Max: f32.Point{X: float32(size), Y: float32(size)}}}.Add(gtx.Ops)
 				stack.Pop()
-				ui.InvalidateOp{}.Add(ops)
+				ui.InvalidateOp{}.Add(gtx.Ops)
 			}
-			pointer.EllipseAreaOp{Rect: image.Rectangle{Max: dims.Size}}.Add(ops)
-			b.click.Add(ops)
-			return dims
+			pointer.EllipseAreaOp{Rect: image.Rectangle{Max: gtx.Dimensions.Size}}.Add(gtx.Ops)
+			b.click.Add(gtx.Ops)
 		})
 	})
-	return f.Layout(child)
+	f.Layout(child)
 }
 
 func colorMaterial(ops *ui.Ops, color color.RGBA) ui.MacroOp {
@@ -168,33 +166,35 @@ func toRectF(r image.Rectangle) f32.Rectangle {
 	}
 }
 
-func fab(ops *ui.Ops, cs layout.Constraints, ico image.Image, mat ui.MacroOp, size int) layout.Dimensions {
+func fab(gtx *layout.Context, ico image.Image, mat ui.MacroOp, size int) {
 	dp := image.Point{X: (size - ico.Bounds().Dx()) / 2, Y: (size - ico.Bounds().Dy()) / 2}
 	dims := image.Point{X: size, Y: size}
 	rr := float32(size) * .5
-	roundRect(ops, float32(size), float32(size), rr, rr, rr, rr)
-	mat.Add(ops)
-	paint.PaintOp{Rect: f32.Rectangle{Max: f32.Point{X: float32(size), Y: float32(size)}}}.Add(ops)
-	paint.ImageOp{Src: ico, Rect: ico.Bounds()}.Add(ops)
+	roundRect(gtx.Ops, float32(size), float32(size), rr, rr, rr, rr)
+	mat.Add(gtx.Ops)
+	paint.PaintOp{Rect: f32.Rectangle{Max: f32.Point{X: float32(size), Y: float32(size)}}}.Add(gtx.Ops)
+	paint.ImageOp{Src: ico, Rect: ico.Bounds()}.Add(gtx.Ops)
 	paint.PaintOp{
 		Rect: toRectF(ico.Bounds().Add(dp)),
-	}.Add(ops)
-	return layout.Dimensions{Size: dims}
+	}.Add(gtx.Ops)
+	gtx.Dimensions = layout.Dimensions{Size: dims}
 }
-func (r Rect) Layout(ops *ui.Ops, cs layout.Constraints) layout.Dimensions {
+
+func (r Rect) Layout(gtx *layout.Context) {
+	cs := gtx.Constraints
 	col := argb(r.Color)
 	sz := image.Point{X: cs.Width.Max, Y: cs.Height.Max}
 	if rr := r.Corner; rr > 0 {
-		roundRect(ops, float32(sz.X), float32(sz.Y), rr, rr, rr, rr)
+		roundRect(gtx.Ops, float32(sz.X), float32(sz.Y), rr, rr, rr, rr)
 	}
-	paint.ColorOp{Color: col}.Add(ops)
+	paint.ColorOp{Color: col}.Add(gtx.Ops)
 	paint.PaintOp{Rect: f32.Rectangle{
 		Max: f32.Point{
 			X: float32(sz.X),
 			Y: float32(sz.Y),
 		},
-	}}.Add(ops)
-	return layout.Dimensions{Size: sz}
+	}}.Add(gtx.Ops)
+	gtx.Dimensions = layout.Dimensions{Size: sz}
 }
 
 func rgb(c uint32) color.RGBA {
