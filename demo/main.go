@@ -5,7 +5,6 @@ import (
 
 	"gioui.org/ui"
 	"gioui.org/ui/app"
-	"gioui.org/ui/gesture"
 	"gioui.org/ui/layout"
 	"gopher.con/simple"
 )
@@ -26,11 +25,8 @@ func main() {
 				gtx.Reset(&e.Config, layout.RigidConstraints(e.Size))
 				theme.Reset(gtx.Config)
 
-				q := w.Queue()
-				for e, ok := btn.Next(q); ok; e, ok = btn.Next(q) {
-					if e.Type == gesture.TypeClick {
-						n += 1
-					}
+				for btn.Clicked(gtx) {
+					n += 1
 				}
 
 				list.Layout(gtx, n, func(i int) {

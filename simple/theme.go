@@ -73,18 +73,28 @@ type icon struct {
 type IconButton struct {
 	icon     *icon
 	click    gesture.Click
+	clicks   int
 	inkStart bool
 	inkTime  time.Time
 	inkPos   f32.Point
 }
 
-func (b *IconButton) Next(queue ui.Queue) (gesture.ClickEvent, bool) {
-	e, ok := b.click.Next(queue)
-	if e.Type == gesture.TypeClick {
-		b.inkPos = e.Position
-		b.inkStart = true
+func (b *IconButton) Clicked(gtx *layout.Context) bool {
+	for _, e := range b.click.Events(gtx) {
+		if e.Type == gesture.TypeClick {
+			b.inkPos = e.Position
+			b.inkStart = true
+			b.clicks++
+		}
 	}
-	return e, ok
+	if b.clicks > 0 {
+		b.clicks--
+		if b.clicks > 0 {
+			ui.InvalidateOp{}.Add(gtx.Ops)
+		}
+		return true
+	}
+	return false
 }
 
 func (b *IconButton) Layout(gtx *layout.Context) {
