@@ -1,5 +1,5 @@
-gioui.org/ui v0.0.0-20190926171558-ce74bc0cbaea h1:rv21Wx1Inf27NY453rrrP6tuEG65PyWPhnP2Jx+Qb8k=
-gioui.org/ui v0.0.0-20190926171558-ce74bc0cbaea/go.mod h1:PssKPKlqVIeyaed+0w492Xc2NgX5M3n6oZKOAj5rxoE=
+gioui.org v0.0.0-20190930110410-3c65aa61f64e h1:QD7zkFNJz4TfiOv38QqBHZcR/RCtrQxJ4toj4DQYSV0=
+gioui.org v0.0.0-20190930110410-3c65aa61f64e/go.mod h1:+CEjc9B//HrBfWsQOVxjCyih7HGIj3Pww1xFHVDZyyk=
 github.com/BurntSushi/xgb v0.0.0-20160522181843-27f122750802/go.mod h1:IVnqGOEym/WlBOVXweHU+Q+/VP0lqqI8lqeDx9IjBqo=
 golang.org/x/crypto v0.0.0-20190308221718-c2843e01d9a2/go.mod h1:djNgcEr1/C05ACkg1iLfiJU5Ep61QUkGW8qpdssI0+w=
 golang.org/x/crypto v0.0.0-20190510104115-cbcb75029529/go.mod h1:yigFU9vqHzYiE8UmvKecakEJjdnWj3jj499lnFckfCI=

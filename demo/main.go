@@ -3,9 +3,9 @@ package main
 import (
 	"fmt"
 
+	"gioui.org/app"
+	"gioui.org/layout"
 	"gioui.org/ui"
-	"gioui.org/ui/app"
-	"gioui.org/ui/layout"
 	"gopher.con/simple"
 )
 
