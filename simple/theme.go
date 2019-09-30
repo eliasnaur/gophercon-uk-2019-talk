@@ -8,12 +8,13 @@ import (
 
 	"gioui.org/f32"
 	"gioui.org/gesture"
+	"gioui.org/io/pointer"
 	"gioui.org/layout"
-	"gioui.org/measure"
-	"gioui.org/paint"
-	"gioui.org/pointer"
+	"gioui.org/op"
+	"gioui.org/op/paint"
 	"gioui.org/text"
-	"gioui.org/ui"
+	"gioui.org/text/shape"
+	"gioui.org/unit"
 	"golang.org/x/exp/shiny/iconvg"
 	"golang.org/x/exp/shiny/materialdesign/icons"
 	"golang.org/x/image/font/gofont/goregular"
@@ -21,7 +22,7 @@ import (
 )
 
 type Theme struct {
-	faces   measure.Faces
+	faces   shape.Faces
 	regular *sfnt.Font
 }
 
@@ -43,12 +44,12 @@ func NewTheme() *Theme {
 	}
 }
 
-func (t *Theme) Reset(c ui.Config) {
+func (t *Theme) Reset(c unit.Converter) {
 	t.faces.Reset(c)
 }
 
 func (t *Theme) face(size float32) text.Face {
-	return t.faces.For(t.regular, ui.Sp(size))
+	return t.faces.For(t.regular, unit.Sp(size))
 }
 
 func (t *Theme) Editor(size float32) *text.Editor {
@@ -63,7 +64,7 @@ func (t *Theme) Label(txt string, size float32) text.Label {
 
 type icon struct {
 	src  []byte
-	size ui.Value
+	size unit.Value
 
 	// Cached values.
 	img     image.Image
@@ -90,7 +91,7 @@ func (b *IconButton) Clicked(gtx *layout.Context) bool {
 	if b.clicks > 0 {
 		b.clicks--
 		if b.clicks > 0 {
-			ui.InvalidateOp{}.Add(gtx.Ops)
+			op.InvalidateOp{}.Add(gtx.Ops)
 		}
 		return true
 	}
@@ -99,18 +100,18 @@ func (b *IconButton) Clicked(gtx *layout.Context) bool {
 
 func (b *IconButton) Layout(gtx *layout.Context) {
 	if b.icon == nil {
-		b.icon = &icon{src: icons.ContentAdd, size: ui.Dp(48)}
+		b.icon = &icon{src: icons.ContentAdd, size: unit.Dp(48)}
 	}
 	f := layout.Flex{Axis: layout.Vertical, Alignment: layout.End}
 	f.Init(gtx)
 	child := f.Rigid(func() {
-		in := layout.Inset{Top: ui.Dp(8)}
+		in := layout.Inset{Top: unit.Dp(8)}
 		in.Layout(gtx, func() {
 			col := colorMaterial(gtx.Ops, rgb(0x00dd00))
 			if b.click.State() == gesture.StatePressed {
 				col = colorMaterial(gtx.Ops, rgb(0x00aa00))
 			}
-			size := gtx.Px(ui.Dp(112))
+			size := gtx.Px(unit.Dp(112))
 			fab(gtx, b.icon.image(gtx), col, size)
 			if b.inkStart {
 				b.inkTime = gtx.Now()
@@ -118,21 +119,21 @@ func (b *IconButton) Layout(gtx *layout.Context) {
 			}
 			if d := gtx.Now().Sub(b.inkTime); d < time.Second {
 				t := float32(d.Seconds())
-				var stack ui.StackOp
+				var stack op.StackOp
 				stack.Push(gtx.Ops)
 				size := float32(size) * 7 * t
 				rr := size * .5
 				col := byte(0xaa * (1 - t*t))
 				ink := colorMaterial(gtx.Ops, color.RGBA{A: col, R: col, G: col, B: col})
 				ink.Add(gtx.Ops)
-				ui.TransformOp{}.Offset(b.inkPos).Offset(f32.Point{
+				op.TransformOp{}.Offset(b.inkPos).Offset(f32.Point{
 					X: -rr,
 					Y: -rr,
 				}).Add(gtx.Ops)
 				roundRect(gtx.Ops, float32(size), float32(size), rr, rr, rr, rr)
 				paint.PaintOp{Rect: f32.Rectangle{Max: f32.Point{X: float32(size), Y: float32(size)}}}.Add(gtx.Ops)
 				stack.Pop()
-				ui.InvalidateOp{}.Add(gtx.Ops)
+				op.InvalidateOp{}.Add(gtx.Ops)
 			}
 			pointer.EllipseAreaOp{Rect: image.Rectangle{Max: gtx.Dimensions.Size}}.Add(gtx.Ops)
 			b.click.Add(gtx.Ops)
@@ -141,15 +142,15 @@ func (b *IconButton) Layout(gtx *layout.Context) {
 	f.Layout(child)
 }
 
-func colorMaterial(ops *ui.Ops, color color.RGBA) ui.MacroOp {
-	var mat ui.MacroOp
+func colorMaterial(ops *op.Ops, color color.RGBA) op.MacroOp {
+	var mat op.MacroOp
 	mat.Record(ops)
 	paint.ColorOp{Color: color}.Add(ops)
 	mat.Stop()
 	return mat
 }
 
-func (ic *icon) image(cfg ui.Config) image.Image {
+func (ic *icon) image(cfg unit.Converter) image.Image {
 	sz := cfg.Px(ic.size)
 	if sz == ic.imgSize {
 		return ic.img
@@ -176,7 +177,7 @@ func toRectF(r image.Rectangle) f32.Rectangle {
 	}
 }
 
-func fab(gtx *layout.Context, ico image.Image, mat ui.MacroOp, size int) {
+func fab(gtx *layout.Context, ico image.Image, mat op.MacroOp, size int) {
 	dp := image.Point{X: (size - ico.Bounds().Dx()) / 2, Y: (size - ico.Bounds().Dy()) / 2}
 	dims := image.Point{X: size, Y: size}
 	rr := float32(size) * .5
@@ -217,7 +218,7 @@ func argb(c uint32) color.RGBA {
 
 // START RR OMIT
 // https://pomax.github.io/bezierinfo/#circles_cubic.
-func roundRect(ops *ui.Ops, width, height, se, sw, nw, ne float32) {
+func roundRect(ops *op.Ops, width, height, se, sw, nw, ne float32) {
 	w, h := float32(width), float32(height)
 	const c = 0.55228475 // 4*(sqrt(2)-1)/3
 	var b paint.PathBuilder

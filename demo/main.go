@@ -5,7 +5,7 @@ import (
 
 	"gioui.org/app"
 	"gioui.org/layout"
-	"gioui.org/ui"
+	"gioui.org/unit"
 	"gopher.con/simple"
 )
 
@@ -36,7 +36,7 @@ func main() {
 
 				align := layout.Align(layout.SE)
 				align.Layout(gtx, func() {
-					margins := layout.UniformInset(ui.Dp(8))
+					margins := layout.UniformInset(unit.Dp(8))
 					margins.Layout(gtx, func() {
 						btn.Layout(gtx)
 					})
