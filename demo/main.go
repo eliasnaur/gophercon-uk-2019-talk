@@ -22,7 +22,7 @@ func main() {
 		for e := range w.Events() {
 			switch e := e.(type) {
 			case app.UpdateEvent:
-				gtx.Reset(&e.Config, layout.RigidConstraints(e.Size))
+				gtx.Reset(&e.Config, e.Size)
 				theme.Reset(gtx.Config)
 
 				for btn.Clicked(gtx) {
