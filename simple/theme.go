@@ -44,22 +44,19 @@ func NewTheme() *Theme {
 	}
 }
 
-func (t *Theme) Reset(c unit.Converter) {
-	t.faces.Reset(c)
-}
-
-func (t *Theme) face(size float32) text.Face {
-	return t.faces.For(t.regular, unit.Sp(size))
+func (t *Theme) Reset() {
+	t.faces.Reset()
 }
 
 func (t *Theme) Editor(size float32) *text.Editor {
 	return &text.Editor{
-		Face: t.face(size),
+		Face: t.faces.For(t.regular),
+		Size: unit.Sp(size),
 	}
 }
 
 func (t *Theme) Label(txt string, size float32) text.Label {
-	return text.Label{Face: t.face(size), Text: txt}
+	return text.Label{Face: t.faces.For(t.regular), Size: unit.Sp(size), Text: txt}
 }
 
 type icon struct {

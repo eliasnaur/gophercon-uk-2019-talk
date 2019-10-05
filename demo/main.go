@@ -23,7 +23,7 @@ func main() {
 			switch e := e.(type) {
 			case app.UpdateEvent:
 				gtx.Reset(&e.Config, e.Size)
-				theme.Reset(gtx.Config)
+				theme.Reset()
 
 				for btn.Clicked(gtx) {
 					n += 1
