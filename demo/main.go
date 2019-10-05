@@ -23,7 +23,6 @@ func main() {
 			switch e := e.(type) {
 			case app.UpdateEvent:
 				gtx.Reset(&e.Config, e.Size)
-				theme.Reset()
 
 				for btn.Clicked(gtx) {
 					n += 1
@@ -31,7 +30,7 @@ func main() {
 
 				list.Layout(gtx, n, func(i int) {
 					s := fmt.Sprintf("hello, world %d", i)
-					theme.Label(s, 46).Layout(gtx)
+					theme.Label(gtx, s, 46)
 				})
 
 				align := layout.Align(layout.SE)

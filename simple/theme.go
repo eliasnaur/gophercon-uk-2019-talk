@@ -22,8 +22,7 @@ import (
 )
 
 type Theme struct {
-	faces   shape.Faces
-	regular *sfnt.Font
+	family text.Family
 }
 
 type Rect struct {
@@ -40,23 +39,21 @@ func NewTheme() *Theme {
 		panic(err)
 	}
 	return &Theme{
-		regular: regular,
+		family: &shape.Family{
+			Regular: regular,
+		},
 	}
-}
-
-func (t *Theme) Reset() {
-	t.faces.Reset()
 }
 
 func (t *Theme) Editor(size float32) *text.Editor {
 	return &text.Editor{
-		Face: t.faces.For(t.regular),
-		Size: unit.Sp(size),
+		Family: t.family,
+		Size:   unit.Sp(size),
 	}
 }
 
-func (t *Theme) Label(txt string, size float32) text.Label {
-	return text.Label{Face: t.faces.For(t.regular), Size: unit.Sp(size), Text: txt}
+func (t *Theme) Label(gtx *layout.Context, txt string, size float32) {
+	text.Label{Size: unit.Sp(size), Text: txt}.Layout(gtx, t.family)
 }
 
 type icon struct {
