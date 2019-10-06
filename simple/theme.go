@@ -97,8 +97,7 @@ func (b *IconButton) Layout(gtx *layout.Context) {
 		b.icon = &icon{src: icons.ContentAdd, size: unit.Dp(48)}
 	}
 	f := layout.Flex{Axis: layout.Vertical, Alignment: layout.End}
-	f.Init(gtx)
-	child := f.Rigid(func() {
+	child := f.Rigid(gtx, func() {
 		in := layout.Inset{Top: unit.Dp(8)}
 		in.Layout(gtx, func() {
 			col := colorMaterial(gtx.Ops, rgb(0x00dd00))
@@ -133,7 +132,7 @@ func (b *IconButton) Layout(gtx *layout.Context) {
 			b.click.Add(gtx.Ops)
 		})
 	})
-	f.Layout(child)
+	f.Layout(gtx, child)
 }
 
 func colorMaterial(ops *op.Ops, color color.RGBA) op.MacroOp {
