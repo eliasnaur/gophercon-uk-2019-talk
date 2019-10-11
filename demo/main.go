@@ -5,23 +5,34 @@ import (
 
 	"gioui.org/app"
 	"gioui.org/layout"
+	"gioui.org/text"
+	"gioui.org/text/opentype"
 	"gioui.org/unit"
-	"gopher.con/simple"
+	"gioui.org/widget"
+	"gioui.org/widget/material"
+	"golang.org/x/exp/shiny/materialdesign/icons"
+	"golang.org/x/image/font/gofont/goregular"
 )
 
 func main() {
 	go func() {
-		theme := simple.NewTheme()
+		shaper := new(text.Shaper)
+		shaper.Register(text.Font{}, opentype.Must(
+			opentype.Parse(goregular.TTF),
+		))
+		theme := material.NewTheme(shaper)
+
+		ico, _ := material.NewIcon(icons.ContentAdd)
 		w := app.NewWindow()
 		gtx := &layout.Context{
 			Queue: w.Queue(),
 		}
 		list := layout.List{Axis: layout.Vertical}
-		btn := new(simple.IconButton)
+		btn := new(widget.Button)
 		n := 3
 		for e := range w.Events() {
 			switch e := e.(type) {
-			case app.UpdateEvent:
+			case app.FrameEvent:
 				gtx.Reset(&e.Config, e.Size)
 
 				for btn.Clicked(gtx) {
@@ -30,18 +41,20 @@ func main() {
 
 				list.Layout(gtx, n, func(i int) {
 					s := fmt.Sprintf("hello, world %d", i)
-					theme.Label(gtx, s, 46)
+					theme.H2(s).Layout(gtx)
 				})
 
 				align := layout.Align(layout.SE)
 				align.Layout(gtx, func() {
 					margins := layout.UniformInset(unit.Dp(8))
 					margins.Layout(gtx, func() {
-						btn.Layout(gtx)
+						b := theme.IconButton(ico)
+						b.Size = unit.Dp(72)
+						b.Layout(gtx, btn)
 					})
 				})
 
-				w.Update(gtx.Ops)
+				e.Frame(gtx.Ops)
 			}
 		}
 	}()
