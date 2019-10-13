@@ -1,4 +1,4 @@
-module gopher.con
+module github.com/eliasnaur/gophercon-uk-2019-talk
 
 go 1.13
 
