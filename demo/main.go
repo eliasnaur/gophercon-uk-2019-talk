@@ -4,23 +4,17 @@ import (
 	"fmt"
 
 	"gioui.org/app"
+	_ "gioui.org/font/gofont"
 	"gioui.org/layout"
-	"gioui.org/text"
-	"gioui.org/text/opentype"
 	"gioui.org/unit"
 	"gioui.org/widget"
 	"gioui.org/widget/material"
 	"golang.org/x/exp/shiny/materialdesign/icons"
-	"golang.org/x/image/font/gofont/goregular"
 )
 
 func main() {
 	go func() {
-		shaper := new(text.Shaper)
-		shaper.Register(text.Font{}, opentype.Must(
-			opentype.Parse(goregular.TTF),
-		))
-		theme := material.NewTheme(shaper)
+		theme := material.NewTheme()
 
 		ico, _ := material.NewIcon(icons.ContentAdd)
 		w := app.NewWindow()
