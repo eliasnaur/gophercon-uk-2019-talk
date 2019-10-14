@@ -5,6 +5,7 @@ import (
 
 	"gioui.org/app"
 	_ "gioui.org/font/gofont"
+	"gioui.org/io/system"
 	"gioui.org/layout"
 	"gioui.org/unit"
 	"gioui.org/widget"
@@ -26,8 +27,8 @@ func main() {
 		n := 3
 		for e := range w.Events() {
 			switch e := e.(type) {
-			case app.FrameEvent:
-				gtx.Reset(&e.Config, e.Size)
+			case system.FrameEvent:
+				gtx.Reset(e.Config, e.Size)
 
 				for btn.Clicked(gtx) {
 					n += 1
