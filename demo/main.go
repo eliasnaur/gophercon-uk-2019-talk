@@ -4,7 +4,7 @@ import (
 	"fmt"
 
 	"gioui.org/app"
-	_ "gioui.org/font/gofont"
+	"gioui.org/font/gofont"
 	"gioui.org/io/system"
 	"gioui.org/layout"
 	"gioui.org/unit"
@@ -15,6 +15,7 @@ import (
 
 func main() {
 	go func() {
+		gofont.Register()
 		theme := material.NewTheme()
 
 		ico, _ := material.NewIcon(icons.ContentAdd)
