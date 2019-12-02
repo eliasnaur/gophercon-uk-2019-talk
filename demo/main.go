@@ -20,9 +20,7 @@ func main() {
 
 		ico, _ := material.NewIcon(icons.ContentAdd)
 		w := app.NewWindow()
-		gtx := &layout.Context{
-			Queue: w.Queue(),
-		}
+		gtx := layout.NewContext(w.Queue())
 		list := layout.List{Axis: layout.Vertical}
 		btn := new(widget.Button)
 		n := 3
