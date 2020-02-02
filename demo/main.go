@@ -38,8 +38,7 @@ func main() {
 					theme.H2(s).Layout(gtx)
 				})
 
-				align := layout.Align(layout.SE)
-				align.Layout(gtx, func() {
+				layout.SE.Layout(gtx, func() {
 					margins := layout.UniformInset(unit.Dp(8))
 					margins.Layout(gtx, func() {
 						b := theme.IconButton(ico)
