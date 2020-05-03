@@ -18,7 +18,7 @@ func main() {
 		gofont.Register()
 		theme := material.NewTheme()
 
-		ico, _ := material.NewIcon(icons.ContentAdd)
+		ico, _ := widget.NewIcon(icons.ContentAdd)
 		w := app.NewWindow()
 		gtx := layout.NewContext(w.Queue())
 		list := layout.List{Axis: layout.Vertical}
@@ -35,13 +35,13 @@ func main() {
 
 				list.Layout(gtx, n, func(i int) {
 					s := fmt.Sprintf("hello, world %d", i)
-					theme.H2(s).Layout(gtx)
+					material.H2(theme, s).Layout(gtx)
 				})
 
 				layout.SE.Layout(gtx, func() {
 					margins := layout.UniformInset(unit.Dp(8))
 					margins.Layout(gtx, func() {
-						b := theme.IconButton(ico)
+						b := material.IconButton(theme, ico)
 						b.Size = unit.Dp(72)
 						b.Layout(gtx, btn)
 					})
