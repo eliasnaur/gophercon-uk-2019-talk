@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"os"
 
 	"gioui.org/app"
 	"gioui.org/font/gofont"
@@ -16,8 +17,7 @@ import (
 
 func main() {
 	go func() {
-		gofont.Register()
-		theme := material.NewTheme()
+		theme := material.NewTheme(gofont.Collection())
 
 		ico, _ := widget.NewIcon(icons.ContentAdd)
 		w := app.NewWindow()
@@ -27,10 +27,12 @@ func main() {
 		n := 3
 		for e := range w.Events() {
 			switch e := e.(type) {
+			case system.DestroyEvent:
+				os.Exit(0)
 			case system.FrameEvent:
-				gtx := layout.NewContext(&ops, e.Queue, e.Config, e.Size)
+				gtx := layout.NewContext(&ops, e)
 
-				for btn.Clicked(gtx) {
+				for btn.Clicked() {
 					n += 1
 				}
 
